@@ -7,7 +7,7 @@ class RVArch(val ArchSize: Int, val MemSize: Int) extends Module {
   private val SftLen = (MLen / 32) + 4
   val WLen = 32;
 
-  // Define def aliases
+  // Define type aliases
   def Byte = UInt(8.W)
   def Half = UInt(16.W)
   def Word = UInt(32.W)
@@ -27,11 +27,12 @@ class RVArch(val ArchSize: Int, val MemSize: Int) extends Module {
   def UShft = UInt(SftLen.W)
 
 
-  class state extends Bundle {
+  val state = new Bundle {
     val regfile = RegInit(VecInit(Seq.fill(32)(0.U(MLen.W))))
     val pc = RegInit(0.U(MLen.W))
     val memory = Mem(MemSize, UInt(8.W))
   }
+
 
 
 }
