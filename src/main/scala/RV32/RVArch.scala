@@ -65,24 +65,20 @@ class RVArch(val ArchSize: Int, val MemSize: Int) extends Module {
 
   }
 
-}
-
-object VerilogGen extends App {
-  val arch = new RVArch(32, 0xffff)
-
   // example of defining the instruction
   // rd, rs1, and rs2 are hardcoded - this is a major issue
   // need a better understanding of what VADL is doing when defining specific instructions
   // and how to replicate those generic registers
-  val ADD = new arch.RTypeInstruction {
-    val rd = UInt(5.W)
-    val rs1 = UInt(5.W)
-    val rs2 = UInt(5.W)
-    val op = (a: UInt, b: UInt) => a + b
-  }
+    val ADD = new RTypeInstruction {
+      val rd = UInt(5.W)
+      val rs1 = UInt(5.W)
+      val rs2 = UInt(5.W)
+      val op = (a: UInt, b: UInt) => a + b
+    }
 
-  ADD.execute()
+}
 
+object VerilogGen extends App {
   // Emit Verilog
-  emitVerilog(arch, Array("--target-dir", "generated"))
+  emitVerilog(new RVArch(32, 0xffff), Array("--target-dir", "generated"))
 }
