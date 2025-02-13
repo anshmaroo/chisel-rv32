@@ -42,9 +42,9 @@ class RVArch(val ArchSize: Int, val MemSize: Int) extends Module {
   }
 
   trait RTypeInstruction extends Instruction {
-    def rd: Int
-    def rs1: Int
-    def rs2: Int
+    def rd: UInt
+    def rs1: UInt
+    def rs2: UInt
     def op: (UInt, UInt) => UInt
 
     @Override
@@ -52,10 +52,37 @@ class RVArch(val ArchSize: Int, val MemSize: Int) extends Module {
       state.regfile(rd) := op(state.regfile(rs1), state.regfile(rs2))
     }
 
+    @Override
+    override def encoding(): UInt = {
+      return UInt(32.W)
+    }
+
+    @Override
+    override def assembly(): String = {
+      return "foo";
+    }
+
+
   }
 
 }
 
 object VerilogGen extends App {
-  emitVerilog(new RVArch(32, 0xffff), Array("--target-dir", "generated"))
+  val arch = new RVArch(32, 0xffff)
+
+  // example of defining the instruction
+  // rd, rs1, and rs2 are hardcoded - this is a major issue
+  // need a better understanding of what VADL is doing when defining specific instructions
+  // and how to replicate those generic registers
+  val ADD = new arch.RTypeInstruction {
+    val rd = UInt(5.W)
+    val rs1 = UInt(5.W)
+    val rs2 = UInt(5.W)
+    val op = (a: UInt, b: UInt) => a + b
+  }
+
+  ADD.execute()
+
+  // Emit Verilog
+  emitVerilog(arch, Array("--target-dir", "generated"))
 }
