@@ -35,7 +35,24 @@ class RVArch(val ArchSize: Int, val MemSize: Int) extends Module {
     val memory = Mem(MemSize, UInt(8.W))
   }
 
+  trait Instruction {
+    def execute(): Unit
+    def encoding(): UInt
+    def assembly(): String
+  }
 
+  trait RTypeInstruction extends Instruction {
+    def rd: Int
+    def rs1: Int
+    def rs2: Int
+    def op: (UInt, UInt) => UInt
+
+    @Override
+    override def execute(): Unit = {
+      state.regfile(rd) := op(state.regfile(rs1), state.regfile(rs2))
+    }
+
+  }
 
 }
 
