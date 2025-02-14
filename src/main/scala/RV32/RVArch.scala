@@ -29,27 +29,30 @@ class RVArch(val ArchSize: Int, val MemSize: Int) extends Module {
   def UShft = UInt(SftLen.W)
 
 
-  val state = new Bundle {
+  class State() extends Bundle {
     val regfile = RegInit(VecInit(Seq.fill(32)(0.U(MLen.W))))
     val pc = RegInit(0.U(MLen.W))
     val memory = Mem(MemSize, UInt(8.W))
   }
 
   trait Instruction {
-    def execute(): Unit
+    def execute(bits: UInt): (State) => State
     def encoding(): UInt
     def assembly(): String
   }
 
   trait RTypeInstruction extends Instruction {
-    def rd: UInt
-    def rs1: UInt
-    def rs2: UInt
     def op: (UInt, UInt) => UInt
 
     @Override
-    override def execute(): Unit = {
-      state.regfile(rd) := op(state.regfile(rs1), state.regfile(rs2))
+    override def execute(bits: UInt): State => State = {
+      val rs1: UInt = bits & 0xf8000.U; bits
+      val rs2: UInt = bits & 0x1f00000.U;
+      val rd: UInt = bits & 0xf80.U;
+      (state: State) => {
+        state.regfile(rd) := op(state.regfile(rs1), state.regfile(rs2));
+        state
+      }
     }
 
     @Override
@@ -64,17 +67,6 @@ class RVArch(val ArchSize: Int, val MemSize: Int) extends Module {
 
 
   }
-
-  // example of defining the instruction
-  // rd, rs1, and rs2 are hardcoded - this is a major issue
-  // need a better understanding of what VADL is doing when defining specific instructions
-  // and how to replicate those generic registers
-    val ADD = new RTypeInstruction {
-      val rd = UInt(5.W)
-      val rs1 = UInt(5.W)
-      val rs2 = UInt(5.W)
-      val op = (a: UInt, b: UInt) => a + b
-    }
 
 }
 
