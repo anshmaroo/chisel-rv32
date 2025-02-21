@@ -37,8 +37,6 @@ class RVArch(val ArchSize: Int, val MemSize: Int) extends Module {
 
   trait Instruction {
     def execute(bits: UInt): (State) => State
-    def encoding(): UInt
-    def assembly(): String
   }
 
   trait RTypeInstruction extends Instruction {
@@ -54,18 +52,36 @@ class RVArch(val ArchSize: Int, val MemSize: Int) extends Module {
         state
       }
     }
+  }
+
+  trait ITypeInstruction extends Instruction {
+    def op: (UInt, SInt) => UInt
 
     @Override
-    override def encoding(): UInt = {
-      return UInt(32.W)
+    override def execute(bits: UInt): State => State = {
+      val rs1: UInt = bits & 0xf8000.U; bits
+      val imm: SInt = (bits & 0xfff00000.U).asSInt;
+      val rd: UInt = bits & 0xf80.U;
+      (state: State) => {
+        state.regfile(rd) := op(state.regfile(rs1), imm);
+        state
+      }
     }
+  }
+
+  trait STypeInstruction extends Instruction {
+    def op: (UInt) => UInt
 
     @Override
-    override def assembly(): String = {
-      return "foo";
+    override def execute(bits: UInt): State => State = {
+      val rs1: UInt = bits & 0xf8000.U; bits
+      val rs2: UInt = bits & 0x1f00000.U;
+      val imm: SInt = (((bits >> 25.U) & 0xfe000000.U) | ((bits >> 7.U) & 0x780.U)).asSInt;
+      (state: State) => {
+        state.memory(state.regfile(rs1) + imm.asUInt) := op(state.regfile(rs2));
+        state
+      }
     }
-
-
   }
 
 }
